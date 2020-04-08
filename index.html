@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+	<title>[Practice] Creating a simple caro chessboard</title>
+	<style type="text/css">
+		#xt_auth_container, #xt_auth_iframe, noframes + div {
+          	opacity: 0;
+   			position: absolute !important;
+   			top: -100px !important;
+      	}
+		*, *:before, *:after {
+			-webkit-box-sizing: border-box;
+			box-sizing: border-box;
+		}
+		html, body {
+			background: #f6f6f6;
+			font-family: arial;
+		}
+		.z-depth {
+			-webkit-box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 3px 1px -2px rgba(0, 0, 0, 0.12), 0 1px 5px 0 rgba(0, 0, 0, 0.2);
+			box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 3px 1px -2px rgba(0, 0, 0, 0.12), 0 1px 5px 0 rgba(0, 0, 0, 0.2);
+		}
+		.regBox {
+			background: #fff;
+			margin: 60px auto 0 auto;
+			max-width: 150px;
+		}
+		header {
+			position: fixed;
+			top: 0;
+			height: 49px;
+			width: 100%;
+			background: #fff;
+			z-index: 6666;
+			left: 0;
+		}
+		.boxPlayer {
+			max-width: 700px;
+			margin: 0 auto;
+			display: flex;
+			justify-content: center;
+			height: 100%;
+			align-items: center;
+		}
+		.boxPlayer .player {
+			display: flex;
+			height: 100%;
+			width: 50%;
+			align-items: center;
+			margin-left: 7px;
+		}
+		.boxPlayer .player + .player {
+			margin-right: 53px;
+			margin-left: 18px;
+		}
+		#changerStatus {
+			padding: 7px 15px;
+			border: none;
+			outline: none;
+			border-radius: 5px;
+			background: #f0f0f0;
+		}
+		#changerStatus:hover {
+			background: #eaeaea;
+			-webkit-box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 3px 1px -2px rgba(0, 0, 0, 0.12), 0 1px 5px 0 rgba(0, 0, 0, 0.2);
+			box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 3px 1px -2px rgba(0, 0, 0, 0.12), 0 1px 5px 0 rgba(0, 0, 0, 0.2);
+		}
+		#changerStatus:active {
+			background-color: #f0f0f0;
+		}
+
+		.gameBox, .game {
+			background: #fff;
+			cursor: pointer;
+			position: relative;
+			margin: 0 auto;
+			width: 150px;
+			height: 150px;
+			/* touch-action: none; */
+		}
+		.gameBox .item {
+			position: absolute;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			transition: left .2s, top .2s;
+		}
+		.gameBox .item * {
+			/* touch-action: none; */
+			pointer-events: none;
+		}
+		.gameBox .item .ripple, .gameBox .item .defineXO {
+			width: 100%;
+			height: 100%;
+			z-index: 666;
+			position: absolute;
+		}
+		.gameBox .item .ripple .ripple-element {
+			width: 100%;
+			height: 100%;
+			z-index: 666;
+			position: absolute;
+			background-color: #9E9E9E;
+			border-radius: 50%;
+			pointer-events: none;
+			-webkit-transition: opacity,-webkit-transform 0ms cubic-bezier(0,0,.2,1);
+			transition: opacity,-webkit-transform 0ms cubic-bezier(0,0,.2,1);
+			transition: opacity,transform 0ms cubic-bezier(0,0,.2,1);
+			transition: opacity,transform 0ms cubic-bezier(0,0,.2,1),
+			-webkit-transform 0ms cubic-bezier(0,0,.2,1);
+			-webkit-transform: scale(0);
+			transform: scale(0);
+			opacity: 0;
+		}
+		.gameBox.isPlayX .ripple .ripple-element{
+			background: #2196F3;
+		}
+		.gameBox.isPlayO .ripple .ripple-element {
+			background: #FF5722;
+		}
+
+		.gameBox .item.activeX .ripple .ripple-element {
+			background: none;
+		}
+		.gameBox .item.activeO .ripple .ripple-element {
+			background: none;
+		}
+
+		.gameBox .item:hover .ripple .ripple-element {
+			transform: scale(1.3);
+			opacity: 0.2;
+		}
+		.gameBox .item:before {
+			position: absolute;
+			content: '';
+			border: 1px solid #e0e0e0;
+			width: 100%;
+			height: 100%;
+		}
+		.gameBox .item .defineXO {
+			z-index: 888;
+		}
+
+		.gameBox .item .defineX {
+			transform: translate(24px, 10px) rotate(-45deg);
+			pointer-events: none;
+			opacity: 0;
+		}
+		.gameBox .item .defineX::after {
+			position: absolute;
+			top: 0;
+			left: 0;
+			content: '';
+			height: 0px;
+			border: solid 2px #2196F3;
+			border-right: none;
+			border-bottom: none;
+			border-top: none;
+			pointer-events: none;
+			transform: translate(14px, -14px);
+			transition: height 150ms cubic-bezier(0,0,.2,1);
+		}
+		.gameBox .item .defineX::before {
+			position: absolute;
+			top: 0;
+			left: 0;
+			content: '';
+			width: 0px;
+			border: solid 2px #2196F3;
+			border-right: none;
+			border-left: none;
+			border-top: none;
+			pointer-events: none;
+			transition: width 150ms cubic-bezier(0,0,.2,1);
+		}
+		.gameBox .item.activeX .defineX {
+			opacity: 1;
+		}
+
+		.gameBox .item.activeX .defineX::after {
+			height: 30px;
+		}
+		.gameBox .item.activeX .defineX::before {
+			width: 30px;
+		}
+
+		.gameBox .item .defineO {
+			pointer-events: none;
+			opacity: 0;
+		}
+		.gameBox .item .defineO::after {
+			position: absolute;
+			top: 11px;
+    		left: 10.7px;
+			content: '';
+			border: 2px solid #FF5722;
+			width: 55%;
+			height: 55%;
+			border-radius: 50%;
+			pointer-events: none;
+		}
+		.gameBox .item.activeO .defineO {
+			opacity: 1;
+		}
+
+		.dialog{
+			display: none;
+			position: fixed;
+			width: 100%;
+			height: 100%;
+			top: 0;
+			left: 0;
+			z-index: 9999;
+		}
+		.dialog .dialogBG {
+			position: absolute;
+			width: 100%;
+			height: 100%;
+			top: 0;
+			background: #00000047;
+			left: 0;
+		}
+		.dialog .content{
+			position: relative;
+			margin: 22px auto 0 auto;
+			background: #fff;
+			border-radius: 3px;
+			transition: width .15s;
+			width: 50px;
+		}
+		.dialog .content {
+			margin: 11% auto 0 auto;
+		}
+		.selectPlayer {
+			overflow: hidden;
+		}
+		.selectPlayer .boxSelectPlayer {
+			display: flex;
+			justify-content: center;
+			align-items: center;
+		}
+		.selectPlayer .boxSelectPlayer div, .dialog .content .win .player {
+			width: 122px;
+			display: flex;
+			align-items: center;
+			height: 122px;
+			justify-content: center;
+			margin: 10px;
+			font-size: 1.7rem;
+			color: #fff;
+			transition: transform .2s;
+		}
+		.PlayerX {
+			background: #03A9F4;
+		}
+		.PlayerO {
+			background: #FF9800;
+		}
+		.selectPlayer .boxSelectPlayer div:hover {
+			transform: scale(1.1);
+		}
+		.dialog .content .win {
+			display: none;
+		    padding: 30px;
+		    text-align: center;
+		    font-size: 1.3rem;
+		}
+	</style>
+</head>
+<body>
+	<header class="z-depth">
+		<div class="boxPlayer">
+			<div class="player">
+				<div style="display: flex; width: 80%;">
+					<span id="winX" style="color: #008eff; font-size: 0.8rem">Win:0<span>
+				</div>
+				<div style="display: flex;justify-content: flex-end; width: 20%;">
+					<span style="color: #008eff;">X<span>
+				</div>
+			</div>
+			<div class="player">
+				<div style="display: flex; width: 20%;">
+					<span style="color: #FF5722;">O<span>
+				</div>
+				<div style="display: flex;justify-content: flex-end; width: 80%;">
+					<span id="winO" style="color: #FF5722; font-size: 0.8rem">Win:0<span>
+				</div>
+			</div>
+			<button id="changerStatus">Start</button>
+		</div>
+	</header>
+	<div class="regBox">
+		<div class="gameBox z-depth"></div>
+	</div>
+	<div class="dialog">
+		<div class="dialogBG"></div>
+		<div class="content z-depth">
+			<div class="selectPlayer">
+				<h3 style="text-align: center;">Người chơi đầu tiên</h3>
+				<div class="boxSelectPlayer">
+					<div class="PlayerX z-depth" player="1">X</div>
+					<div class="PlayerO z-depth" player="0">O</div>
+				</div>
+			</div>
+			<div class="win">
+				<div style="display: flex; justify-content: center;">
+					<div class="player"></div>
+				</div>
+				<div>
+					Chiến thắng!!
+				</div>
+			</div>
+		</div>
+	</div>
+	<script type="text/javascript">
+		let Item = function(el, RedT, x, y) {
+			this.x        = x;
+			this.y        = y;
+			this.type     = null;
+			this.isActive = false;
+			this.el       = el;
+			this.RedT     = RedT;
+			this.ripple   = this.el.querySelector('.ripple');
+			this.init();
+		}
+		Item.prototype.init = function() {
+			this.el.addEventListener('click',      this.eventClick.bind(this));
+			this.el.addEventListener('touchstart', this.touchStart.bind(this));
+			this.el.addEventListener('touchenter', this.touchEnter.bind(this));
+			this.el.addEventListener('touchend',   this.touchEnd.bind(this));
+		}
+		Item.prototype.touchStart = function(e) {
+			//console.log('start', e);
+		}
+		Item.prototype.touchEnter = function(e) {
+			//console.log('start', e.target);
+			this.eventClick();
+		}
+		Item.prototype.touchEnd = function(e) {
+			//console.log('end', e);
+
+		}
+		Item.prototype.eventClick = function() {
+			if (this.RedT.isPlay) {
+				if (this.isActive === false) {
+					this.isActive = true;
+					if (this.RedT.player === 0) {
+						this.el.classList.add('activeO');
+					}else{
+						this.el.classList.add('activeX');
+					}
+					this.type = this.RedT.player;
+					this.RedT.itemSelect.push(this.el);
+					this.RedT.changerPlayer();
+				}
+			}else{
+				this.RedT.start();
+			}
+		}
+		Item.prototype.destroy = function() {
+		}
+
+		//
+		let Game = function() {
+			this.itemSelect = [];
+			this.arrPlay    = ['isPlayO', 'isPlayX'];
+			this.player     = 0;    // 0:O, 1:X
+			this.isPlay     = false;
+			this.boxLevel   = 3;
+
+			this.winPlayerO    = 0;
+			this.winPlayerX    = 0;
+
+			this.gameBox       = document.querySelector('.gameBox');
+			this.changerStatus = document.querySelector('#changerStatus');
+			this.elWinO        = document.querySelector('#winO');
+			this.elWinX        = document.querySelector('#winX');
+			// element dialog
+			this.dialog             = document.querySelector('.dialog');
+			this.dialogContent      = this.dialog.querySelector('.content');
+			this.dialogSelectPlayer = this.dialogContent.querySelector('.selectPlayer');
+			this.dialogWin          = this.dialogContent.querySelector('.win');
+			this.dialogWinPlayer    = this.dialogContent.querySelector('.player');
+
+			this.dialogBG           = this.dialog.querySelector('.dialogBG');
+
+			this.dialogBTNPlayerX   = this.dialogSelectPlayer.querySelector('.PlayerX');
+			this.dialogBTNPlayerO   = this.dialogSelectPlayer.querySelector('.PlayerO');
+
+			this.init();
+		}
+		Game.prototype.init = function(){
+			this.paint();
+
+			this.changerStatus.addEventListener('click', this.regChangerStatus.bind(this));
+			this.dialogBTNPlayerX.addEventListener('click', this.selectPlayer.bind(this));
+			this.dialogBTNPlayerO.addEventListener('click', this.selectPlayer.bind(this));
+			this.dialogBG.addEventListener('click', this.closeDialog.bind(this));
+		}
+		Game.prototype.selectPlayer = function(e){
+			let player = e.target.getAttribute('player');
+			this.closeDialog();
+			if (player === '1') {
+				this.player = 1;
+			}else{
+				this.player = 0;
+			}
+			this.play();
+		}
+		Game.prototype.regChangerStatus = function(){
+			if (this.isPlay) {
+				this.restart();
+			}else{
+				this.start();
+			}
+		}
+		// dialog
+		Game.prototype.closeDialog = function(e){
+			this.dialog.style.display = 'none';
+			this.dialogContent.style.width = '50px';
+		}
+		Game.prototype.showSelectPlayer = function(e){
+			this.dialogSelectPlayer.style.display = 'block';
+			this.dialogWin.style.display          = 'none';
+			this.dialog.style.display             = 'block';
+			setTimeout(function(){
+				let width = window.innerWidth - 30;
+				if (width > 600) width = 600;
+				this.dialogContent.style.width = width + 'px';
+			}.bind(this), 5);
+		}
+		Game.prototype.showWinPlayer = function(player){
+			this.dialogSelectPlayer.style.display = 'none';
+			this.dialogWin.style.display          = 'block';
+			this.dialog.style.display             = 'block';
+			setTimeout(function(){
+				let width = window.innerWidth - 30;
+				if (width > 600) width = 600;
+				this.dialogContent.style.width = width + 'px';
+			}.bind(this), 5);
+		}
+		// end dialog
+
+		Game.prototype.changerPlayer = function(){
+			this.checWin();
+			if (this.isPlay) {
+				this.gameBox.classList.remove(this.arrPlay[this.player]);
+				this.player = this.player === 0 ? 1 : 0;
+				this.gameBox.classList.add(this.arrPlay[this.player]);
+			}
+		}
+
+		Game.prototype.paint = function(){
+			this.widthBox = 150/this.boxLevel;
+			this.matrix   = [];
+			let box = document.createElement('div');
+			box.setAttribute('class', 'game');
+			for (let tr = 0; tr < this.boxLevel; tr++) {
+				let cot = [];
+				for (let td = 0; td < this.boxLevel; td++) {
+					let x    = td*this.widthBox;
+					let y    = tr*this.widthBox;
+					let data = {x:td*this.widthBox, y:tr*this.widthBox};
+					let el   = document.createElement('div');
+					el.setAttribute('class', 'item');
+					el.setAttribute('style', 'width:'+this.widthBox+'px;height:'+this.widthBox+'px;left:'+x+'px;top:'+y+'px');
+					el.innerHTML = '<div class="ripple"><div class="ripple-element"></div></div><div class="defineXO defineX"></div><div class="defineXO defineO"></div>';
+					el.RedT = new Item(el, this, td, tr);
+					cot.push(el);
+					box.appendChild(el);
+				}
+				this.matrix.push(cot);
+			}
+			this.gameBox.appendChild(box);
+		}
+		Game.prototype.start = function(){
+			if (this.isPlay === false) {
+				this.showSelectPlayer();
+			}
+		}
+		Game.prototype.restart = function(){
+			this.stop();
+			this.start();
+		}
+
+		Game.prototype.win = function(win){
+			this.stop();
+			setTimeout(function(){
+				this.showWinPlayer();
+				if (win.player === 0) {
+					this.winPlayerO++;
+					this.dialogWinPlayer.innerText = 'O';
+					this.dialogWinPlayer.classList.remove('PlayerX');
+					this.dialogWinPlayer.classList.add('PlayerO');
+				}else{
+					this.winPlayerX++;
+					this.dialogWinPlayer.innerText = 'X';
+					this.dialogWinPlayer.classList.remove('PlayerO');
+					this.dialogWinPlayer.classList.add('PlayerX');
+				}
+				this.elWinO.innerText = 'Win: ' + this.winPlayerO;
+				this.elWinX.innerText = 'Win: ' + this.winPlayerX;
+			}.bind(this), 1000);
+		}
+
+		Game.prototype.checWin = function(){
+			let win = null;
+			for (let i = 0; i < this.itemSelect.length; i++) {
+				let item = this.itemSelect[i];
+
+				// Left
+				let check = this.checWinLeft(item);
+				if (check !== void 0) {
+					win = check;
+					break;
+				}
+				// Left Top
+				check = this.checWinLeftTop(item);
+				if (check !== void 0) {
+					win = check;
+					break;
+				}
+				// Left Bottom
+				check = this.checWinLeftBottom(item);
+				if (check !== void 0) {
+					win = check;
+					break;
+				}
+				// Right
+				check = this.checWinRight(item);
+				if (check !== void 0) {
+					win = check;
+					break;
+				}
+				// Right Top
+				check = this.checWinRightTop(item);
+				if (check !== void 0) {
+					win = check;
+					break;
+				}
+				// Right Bottom
+				check = this.checWinRightBottom(item);
+				if (check !== void 0) {
+					win = check;
+					break;
+				}
+				// Top
+				check = this.checWinTop(item);
+				if (check !== void 0) {
+					win = check;
+					break;
+				}
+				// Bottom
+				check = this.checWinBottom(item);
+				if (check !== void 0) {
+					win = check;
+					break;
+				}
+
+			}
+			if (win !== null) {
+				// tìm ra người chiến thắng;
+				this.win(win);
+			}
+		}
+		//
+		Game.prototype.checWinLeft = function(item){
+			let data = {rotate:0, type: 'left', player:item.RedT.type, length:1, first:item, last:null};
+			let x    = item.RedT.x-1;
+			let win  = true;
+			while(win){
+				let a = this.matrix[item.RedT.y][x];
+				if (a !== void 0 && a.RedT.type === item.RedT.type) {
+					data.length++;
+					data.last = a;
+				}else{
+					win = false;
+				}
+				x--;
+			}
+			if (data.length === 3) {
+				return data;
+			}
+			return void 0;
+		}
+		Game.prototype.checWinLeftTop = function(item){
+			let data = {rotate:45, player:item.RedT.type, length:1, first:item, last:null};
+			let x    = item.RedT.x-1;
+			let y    = item.RedT.y-1;
+			let win  = true;
+			while(win){
+				let aY = this.matrix[y];
+				if (aY !== void 0) {
+					let a = this.matrix[y][x];
+					if (a !== void 0 && a.RedT.type === item.RedT.type) {
+						data.length++;
+						data.last = a;
+					}else{
+						win = false;
+					}
+				}else{
+					win = false;
+				}
+				x--;
+				y--;
+			}
+			if (data.length === 3) {
+				return data;
+			}
+			return void 0;
+		}
+		Game.prototype.checWinLeftBottom = function(item){
+			let data = {rotate:-45, player:item.RedT.type, length:1, first:item, last:null};
+			let x    = item.RedT.x-1;
+			let y    = item.RedT.y+1;
+			let win  = true;
+			while(win){
+				let aY = this.matrix[y];
+				if (aY !== void 0) {
+					let a = this.matrix[y][x];
+					if (a !== void 0 && a.RedT.type === item.RedT.type) {
+						data.length++;
+						data.last = a;
+					}else{
+						win = false;
+					}
+				}else{
+					win = false;
+				}
+				x--;
+				y++;
+			}
+			if (data.length === 3) {
+				return data;
+			}
+			return void 0;
+		}
+
+		Game.prototype.checWinRight = function(item){
+			let data = {rotate:0, type: 'right', player:item.RedT.type, length:1, first:item, last:null};
+			let x    = item.RedT.x+1;
+			let win  = true;
+			while(win){
+				let a = this.matrix[item.RedT.y][x];
+				if (a !== void 0 && a.RedT.type === item.RedT.type) {
+					data.length++;
+					data.last = a;
+				}else{
+					win = false;
+				}
+				x++;
+			}
+			if (data.length === 3) {
+				return data;
+			}
+			return void 0;
+		}
+		Game.prototype.checWinRightTop = function(item){
+			let data = {rotate:-45, player:item.RedT.type, length:1, first:item, last:null};
+			let x    = item.RedT.x+1;
+			let y    = item.RedT.y-1;
+			let win  = true;
+			while(win){
+				let aY = this.matrix[y];
+				if (aY !== void 0) {
+					let a = this.matrix[y][x];
+					if (a !== void 0 && a.RedT.type === item.RedT.type) {
+						data.length++;
+						data.last = a;
+					}else{
+						win = false;
+					}
+				}else{
+					win = false;
+				}
+				x++;
+				y--;
+			}
+			if (data.length === 3) {
+				return data;
+			}
+			return void 0;
+		}
+		Game.prototype.checWinRightBottom = function(item){
+			let data = {rotate:45, player:item.RedT.type, length:1, first:item, last:null};
+			let x    = item.RedT.x+1;
+			let y    = item.RedT.y+1;
+			let win  = true;
+			while(win){
+				let aY = this.matrix[y];
+				if (aY !== void 0) {
+					let a = this.matrix[y][x];
+					if (a !== void 0 && a.RedT.type === item.RedT.type) {
+						data.length++;
+						data.last = a;
+					}else{
+						win = false;
+					}
+				}else{
+					win = false;
+				}
+				x++;
+				y++;
+			}
+			if (data.length === 3) {
+				return data;
+			}
+			return void 0;
+		}
+
+		Game.prototype.checWinTop = function(item){
+			let data = {rotate:0, type: 'top', player:item.RedT.type, length:1, first:item, last:null};
+			let y    = item.RedT.y-1;
+			let win  = true;
+			while(win){
+				let aY = this.matrix[y];
+				if (aY !== void 0) {
+					let a = this.matrix[y][item.RedT.x];
+					if (a !== void 0 && a.RedT.type === item.RedT.type) {
+						data.length++;
+						data.last = a;
+					}else{
+						win = false;
+					}
+				}else{
+					win = false;
+				}
+				y--;
+			}
+			if (data.length === 3) {
+				return data;
+			}
+			return void 0;
+		}
+
+		Game.prototype.checWinBottom = function(item){
+			let data = {rotate:0, type: 'bottom', player:item.RedT.type, length:1, first:item, last:null};
+			let y    = item.RedT.y+1;
+			let win  = true;
+			while(win){
+				let aY = this.matrix[y];
+				if (aY !== void 0) {
+					let a = this.matrix[y][item.RedT.x];
+					if (a !== void 0 && a.RedT.type === item.RedT.type) {
+						data.length++;
+						data.last = a;
+					}else{
+						win = false;
+					}
+				}else{
+					win = false;
+				}
+				y++;
+			}
+			if (data.length === 3) {
+				return data;
+			}
+			return void 0;
+		}
+
+
+		Game.prototype.play = function(){
+			this.resetItemSelect();
+			this.isPlay = true;
+			this.changerStatus.innerText = 'Restart';
+			this.gameBox.classList.add(this.arrPlay[this.player]);
+		}
+		Game.prototype.stop = function(){
+			this.changerStatus.innerText = 'Start';
+			this.isPlay = false;
+			this.gameBox.classList.remove(this.arrPlay[0]);
+			this.gameBox.classList.remove(this.arrPlay[1]);
+		}
+		Game.prototype.resetItemSelect = function(){
+			this.itemSelect.forEach(function(item){
+				item.RedT.type     = null;
+				item.RedT.isActive = false;
+				item.classList.remove('activeO');
+				item.classList.remove('activeX');
+			});
+			this.itemSelect = [];
+		}
+
+
+		window.RedT = new Game();
+	</script>
+</body>
+</html>
